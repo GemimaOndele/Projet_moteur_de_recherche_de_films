@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="results">
+  <h2>Résultats</h2>
+  {% if titre %}<p>Recherche par titre : <strong>{{ titre }}</strong></p>{% endif %}
+  {% if emotion %}<p>Recommandations pour l'émotion : <strong>{{ emotion }}</strong></p>{% endif %}
+
+  {% if films %}
+    <div class="cards">
+      {% for film in films %}
+      <article class="card">
+        <h3>{{ film.title }}</h3>
+        <p class="genres">{{ ", ".join(film.genres) }}</p>
+        <p>Année : {{ film.release_year or "-" }}</p>
+        <p>Note moyenne : {{ film.vote_average }}</p>
+        {% if film.sentiment_label %}
+          <p>Sentiment : {{ film.sentiment_label }} ({{ "%0.2f"|format(film.sentiment_score or 0) }})</p>
+        {% endif %}
+        {% if film.score_emotion %}
+          <p>Score émotion : {{ "%0.2f"|format(film.score_emotion) }}</p>
+        {% endif %}
+        <p class="overview">{{ film.overview[:220] }}{% if film.overview and film.overview|length > 220 %}{% endif %}</p>
+      </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p>Aucun film trouvé. Essayez un autre titre ou une autre émotion.</p>
+  {% endif %}
+
+  <p><a class="back-link" href="{{ url_for('index') }}">Retour à l'accueil</a></p>
+</section>
+{% endblock %}

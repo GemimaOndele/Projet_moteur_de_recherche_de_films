@@ -1,0 +1,67 @@
+:root {
+  --bg: #0f172a;
+  --fg: #f8fafc;
+  --accent: #f97316;
+  --card: #1e293b;
+  --muted: #94a3b8;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+}
+.container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+.site-header, .site-footer {
+  background: #020617;
+}
+.site-header h1 { margin: 0; }
+.hero {
+  text-align: center;
+  margin: 2rem 0;
+}
+.search-form {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+.search-form input,
+.search-form select {
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  border: none;
+}
+.search-form button {
+  padding: 0.9rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: var(--accent);
+  color: #000;
+  font-weight: 600;
+  cursor: pointer;
+}
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+}
+.card {
+  background: var(--card);
+  padding: 1rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+}
+.card h3 { margin-top: 0; }
+.genres { color: var(--muted); font-size: 0.9rem; }
+.overview { font-size: 0.95rem; line-height: 1.4; }
+.back-link {
+  color: var(--accent);
+  text-decoration: none;
+}

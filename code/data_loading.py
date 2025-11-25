@@ -7,11 +7,17 @@ import pandas as pd
 from lib_projet import parser_genres, get_main_genre, extraire_annee
 
 
+
 def charger_dataframe(path_csv: str) -> pd.DataFrame:
     """
     Charge le fichier CSV TMDB en DataFrame pandas.
     """
-    df = pd.read_csv(path_csv)
+    df = pd.read_csv(
+        path_csv,
+        engine="python",  # évite les erreurs de tokenisation dues aux champs JSON complexes
+        encoding="utf-8",
+        on_bad_lines="skip",
+    )
     return df
 
 

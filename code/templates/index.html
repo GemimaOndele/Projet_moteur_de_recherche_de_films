@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+  <h2>Décrivez votre humeur, nous trouvons le film parfait</h2>
+  <form action="{{ url_for('search') }}" method="get" class="search-form">
+    <div>
+      <label for="titre">Titre de film</label>
+      <input type="text" id="titre" name="titre" placeholder="Ex : Inception">
+    </div>
+    <div>
+      <label for="emotion">Votre émotion</label>
+      <select id="emotion" name="emotion">
+        <option value="">Choisir</option>
+        <option value="triste">Triste</option>
+        <option value="stressé">Stressé</option>
+        <option value="heureux">Heureux</option>
+        <option value="nostalgique">Nostalgique</option>
+        <option value="ennuyé">Ennuyé</option>
+        <option value="colere">Colère</option>
+      </select>
+    </div>
+    <button type="submit">Chercher / Recommander</button>
+  </form>
+</section>
+{% endblock %}

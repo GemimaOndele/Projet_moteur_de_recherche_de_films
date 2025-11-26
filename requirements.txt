@@ -4,3 +4,20 @@ matplotlib
 seaborn
 scikit-learn
 nltk
+textblob
+flask
+requests
+opencv-python
+Pillow
+tensorflow
+google-cloud-translate
+werkzeug
+
+# ===== Audio & Multimedia =====
+# pydub      # For audio processing (optional)
+# moviepy    # For video processing (optional)
+
+# ===== API & Web =====
+# beautifulsoup4  # For web scraping (optional)
+# selenium        # For browser automation (optional)
+

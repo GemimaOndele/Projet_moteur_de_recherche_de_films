@@ -1,32 +1,152 @@
 {% extends "base.html" %}
 {% block content %}
 <section class="results">
-  <h2>Résultats</h2>
-  {% if titre %}<p>Recherche par titre : <strong>{{ titre }}</strong></p>{% endif %}
-  {% if emotion %}<p>Recommandations pour l'émotion : <strong>{{ emotion }}</strong></p>{% endif %}
+  <div class="results-header">
+    <h2>Résultats</h2>
+    {% if titre %}<p class="search-info">🔍 Recherche par titre : <strong>{{ titre }}</strong></p>{% endif %}
+    {% if emotion %}
+      <div class="emotion-header emotion-color-{{ emotion_sound.emotion if emotion_sound else 'default' }}">
+        <span class="emotion-emoji">{{ emotion_sound.reaction if emotion_sound else '😐' }}</span>
+        <p class="emotion-info">Recommandations pour l'émotion : <strong>{{ emotion_sound.label if emotion_sound else emotion }}</strong></p>
+        {% if emotion_sound %}
+          <button class="btn-emotion-sound" data-emotion-sound="{{ emotion_sound.url }}" title="Jouer le son de l'émotion">
+            🎵 Écouter l'ambiance
+          </button>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
 
   {% if films %}
     <div class="cards">
       {% for film in films %}
-      <article class="card">
-        <h3>{{ film.title }}</h3>
-        <p class="genres">{{ ", ".join(film.genres) }}</p>
-        <p>Année : {{ film.release_year or "-" }}</p>
-        <p>Note moyenne : {{ film.vote_average }}</p>
-        {% if film.sentiment_label %}
-          <p>Sentiment : {{ film.sentiment_label }} ({{ "%0.2f"|format(film.sentiment_score or 0) }})</p>
-        {% endif %}
-        {% if film.score_emotion %}
-          <p>Score émotion : {{ "%0.2f"|format(film.score_emotion) }}</p>
-        {% endif %}
-        <p class="overview">{{ film.overview[:220] }}{% if film.overview and film.overview|length > 220 %}{% endif %}</p>
+  <article class="card floating-card" data-film-id="{{ film.id }}" data-overview-fr="{{ film.overview_fr|e }}" data-poster="{{ film.poster_url }}" data-backdrop="{{ film.backdrop_url }}">
+        <!-- Poster et Backdrop -->
+        <div class="card-visual">
+          {% if film.backdrop_url %}
+            <div class="card-backdrop" data-bg="{{ film.backdrop_url }}"></div>
+          {% endif %}
+          {% if film.poster_url %}
+            <div class="card-poster">
+              <img src="{{ film.poster_url }}" alt="{{ film.title }}" loading="lazy">
+              {# Afficher l'overlay de lecture si une URL de bande-annonce est disponible #}
+              {% if film.trailer_url %}
+                <div class="play-overlay">
+                  <button class="btn-play-trailer" data-trailer="{{ film.trailer_url }}" data-title="{{ film.title }}" title="Voir la bande annonce">
+                    ▶️
+                  </button>
+                </div>
+              {% endif %}
+            </div>
+          {% endif %}
+        </div>
+        
+        <div class="card-content">
+          <h3 class="film-title">{{ film.title }}</h3>
+          
+          {% if film.runtime %}
+            <p class="film-info">⏱️ {{ film.runtime }} min</p>
+          {% endif %}
+          
+          <p class="genres">{{ ", ".join(film.genres) if film.genres else "-" }}</p>
+          <p class="release-year">📅 Année : {{ film.release_year or "-" }}</p>
+          <p class="rating">⭐ Note : {{ "%0.1f"|format(film.vote_average or 0) }}/10</p>
+          
+          {% if film.sentiment_label %}
+            <div class="sentiment sentiment-{{ film.sentiment_label }}">
+              <strong>Sentiment du synopsis :</strong> {{ film.sentiment_label|upper }} ({{ "%0.2f"|format(film.sentiment_score or 0) }})
+            </div>
+          {% endif %}
+          
+          {% if film.score_emotion %}
+            <p class="emotion-score">💭 Score émotion : {{ "%0.2f"|format(film.score_emotion) }}/10</p>
+          {% endif %}
+          
+          <!-- Description en français -->
+          <details class="overview-details">
+            <summary>📖 Synopsis</summary>
+            <p class="overview">
+              {{ film.overview_fr if film.overview_fr else (film.overview if film.overview else "Aucun résumé disponible.") }}
+            </p>
+          </details>
+          
+          <!-- Actions multimédias -->
+          <div class="card-multimedia">
+            <!-- Bande annonce -->
+            {% if film.trailer_url %}
+              <button class="btn-action btn-trailer" data-trailer="{{ film.trailer_url }}" data-title="{{ film.title }}" title="Voir la bande annonce">
+                🎬 Bande annonce
+              </button>
+            {% endif %}
+            
+            <!-- Générique du film -->
+            {% if film.theme_sound %}
+              <button class="btn-action btn-theme" data-sound="{{ film.theme_sound }}" title="Écouter le générique du film">
+                🎵 Générique
+              </button>
+              <audio class="theme-audio" preload="none"></audio>
+            {% endif %}
+          </div>
+          
+          <!-- Plateformes de streaming -->
+          {% if film.streaming_links %}
+            <div class="streaming-section">
+              <strong>📺 Regarder sur :</strong>
+              <div class="streaming-links">
+                {% for link in film.streaming_links %}
+                  {# Par défaut on redirige vers la page TMDB du film (pas toujours de lien direct provider) #}
+                  <a href="https://www.themoviedb.org/movie/{{ film.id }}?language=fr-FR" target="_blank" rel="noopener noreferrer" class="stream-link stream-{{ link.type }}" title="{{ link.name }}">
+                    {% if link.logo %}
+                      <img src="{{ link.logo }}" alt="{{ link.name }}" class="stream-logo">
+                    {% else %}
+                      <span class="stream-name">{{ link.name }}</span>
+                    {% endif %}
+                  </a>
+                {% endfor %}
+              </div>
+            </div>
+          {% else %}
+            <div class="streaming-section">
+              <strong>📺 Voir la fiche :</strong>
+              <div class="streaming-links">
+                <a href="https://www.themoviedb.org/movie/{{ film.id }}?language=fr-FR" target="_blank" rel="noopener noreferrer" class="stream-link stream-tmdb">
+                  <span class="stream-name">Fiche TMDB</span>
+                </a>
+              </div>
+            </div>
+          {% endif %}
+        </div>
       </article>
       {% endfor %}
     </div>
   {% else %}
-    <p>Aucun film trouvé. Essayez un autre titre ou une autre émotion.</p>
+    <p class="no-results">Aucun film trouvé. Essayez un autre titre ou une autre émotion.</p>
   {% endif %}
 
-  <p><a class="back-link" href="{{ url_for('index') }}">Retour à l'accueil</a></p>
+  <p class="back-link-container"><a class="back-link" href="{{ url_for('index') }}">← Retour à l'accueil</a></p>
 </section>
+
+<!-- Modal pour bande annonce -->
+<div id="trailer-modal" class="modal hidden">
+  <div class="modal-content">
+    <button class="modal-close-btn" title="Fermer">&times;</button>
+    <h3 id="trailer-title"></h3>
+    <iframe id="trailer-iframe" src="" frameborder="0" allowfullscreen allow="autoplay" title="Bande annonce"></iframe>
+  </div>
+</div>
+
+<!-- Audio global pour l'émotion -->
+<audio id="emotion-audio" preload="none"></audio>
+
+<!-- Visualiseur audio -->
+<div class="audio-visualizer" id="audio-visualizer" style="display: none;">
+  <div class="visualizer-bar"></div>
+  <div class="visualizer-bar"></div>
+  <div class="visualizer-bar"></div>
+  <div class="visualizer-bar"></div>
+  <div class="visualizer-bar"></div>
+</div>
+
+<script src="{{ url_for('static', filename='js/results-enhanced.js') }}"></script>
+<script src="{{ url_for('static', filename='js/fix-features.js') }}"></script>
 {% endblock %}

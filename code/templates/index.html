@@ -1,25 +1,48 @@
 {% extends "base.html" %}
 {% block content %}
 <section class="hero">
-  <h2>Décrivez votre humeur, nous trouvons le film parfait</h2>
-  <form action="{{ url_for('search') }}" method="get" class="search-form">
+  <h2>🎬 Trouvez votre film parfait selon votre émotion</h2>
+  <p style="color: var(--muted); font-size: 1.1rem;">Décrivez votre humeur, nous trouvons le film idéal pour vous ✨</p>
+  
+  <!-- Détection d'émotion par webcam -->
+  <div class="emotion-detection">
+    <button id="btn-webcam" class="btn-webcam">📷 Détecter mon émotion (Webcam)</button>
+    <div id="webcam-container" class="webcam-container hidden">
+      <video id="video" autoplay playsinline></video>
+      <canvas id="canvas" class="hidden"></canvas>
+      <button id="btn-capture" class="btn-capture">Capturer</button>
+      <p id="detected-emotion" class="detected-emotion"></p>
+    </div>
+    <input type="file" id="file-input" accept="image/*" class="hidden">
+    <button id="btn-upload" class="btn-upload">📁 Uploader une image</button>
+  </div>
+
+  <form action="{{ url_for('search') }}" method="get" class="search-form" id="search-form">
     <div>
-      <label for="titre">Titre de film</label>
-      <input type="text" id="titre" name="titre" placeholder="Ex : Inception">
+      <label for="titre">🎥 Titre de film (optionnel)</label>
+      <input type="text" id="titre" name="titre" placeholder="Ex : Inception, Avatar, Interstellar...">
     </div>
     <div>
-      <label for="emotion">Votre émotion</label>
+      <label for="emotion">💭 Votre émotion du moment</label>
       <select id="emotion" name="emotion">
-        <option value="">Choisir</option>
-        <option value="triste">Triste</option>
-        <option value="stressé">Stressé</option>
-        <option value="heureux">Heureux</option>
-        <option value="nostalgique">Nostalgique</option>
-        <option value="ennuyé">Ennuyé</option>
-        <option value="colere">Colère</option>
+        <option value="">Choisir une émotion…</option>
+        <option value="heureux">😊 Heureux - Je veux rire et sourire</option>
+        <option value="triste">😢 Triste - J'ai besoin de catharsis</option>
+        <option value="stressé">😰 Stressé - Donnez-moi de l'adrénaline</option>
+        <option value="nostalgique">🥰 Nostalgique - Des souvenirs émouvants</option>
+        <option value="ennuyé">😑 Ennuyé - Quelque chose de captivant</option>
+        <option value="colere">😠 Colère - Un film intense</option>
+        <option value="peur">😨 Peur - J'aime frissonner</option>
+        <option value="surprise">😲 Surprise - Étonnez-moi!</option>
       </select>
     </div>
-    <button type="submit">Chercher / Recommander</button>
+    <button type="submit">🔍 Chercher / Recommander</button>
   </form>
+
+  <!-- Lecteur audio pour son d'émotion -->
+  <audio id="emotion-sound" preload="auto"></audio>
 </section>
+
+<script src="{{ url_for('static', filename='js/emotion-detection.js') }}"></script>
+<script src="{{ url_for('static', filename='js/sound-manager.js') }}"></script>
 {% endblock %}

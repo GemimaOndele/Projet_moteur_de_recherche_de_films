@@ -23,12 +23,14 @@ function playEmotionSound(emotion) {
   if (!emotionSound) return;
 
   const soundMap = {
-    'triste': '/static/audio/emotion_sad.mp3',
-    'stressé': '/static/audio/emotion_stressed.mp3',
-    'heureux': '/static/audio/emotion_happy.mp3',
-    'nostalgique': '/static/audio/emotion_nostalgic.mp3',
-    'ennuyé': '/static/audio/emotion_bored.mp3',
-    'colere': '/static/audio/emotion_angry.mp3'
+    'triste': '/static/audio/sounds/emotion_sad.mp3',
+    'stressé': '/static/audio/sounds/emotion_stressed.mp3',
+    'heureux': '/static/audio/sounds/emotion_happy.mp3',
+    'nostalgique': '/static/audio/sounds/emotion_nostalgic.mp3',
+    'ennuyé': '/static/audio/sounds/emotion_bored.mp3',
+    'colere': '/static/audio/sounds/emotion_angry.mp3',
+    'peur': '/static/audio/sounds/emotion_fear.mp3',
+    'surprise': '/static/audio/sounds/emotion_surprise.mp3'
   };
 
   const soundUrl = soundMap[emotion];

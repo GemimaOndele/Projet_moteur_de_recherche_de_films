@@ -44,6 +44,11 @@ document.addEventListener('DOMContentLoaded', () => {
       if (emotion) {
         detectedEmotionEl.textContent = `Émotion détectée: ${emotion}`;
         emotionSelect.value = emotion;
+
+        // Jouer automatiquement le son correspondant à l'émotion détectée
+        if (typeof window.playEmotionSound === 'function') {
+          window.playEmotionSound(emotion);
+        }
         
         // Arrêter la webcam
         if (stream) {
@@ -70,6 +75,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (emotion) {
       detectedEmotionEl.textContent = `Émotion détectée: ${emotion}`;
       emotionSelect.value = emotion;
+
+      // Jouer automatiquement le son correspondant à l'émotion détectée
+      if (typeof window.playEmotionSound === 'function') {
+        window.playEmotionSound(emotion);
+      }
     }
   });
 });

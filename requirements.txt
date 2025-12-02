@@ -12,12 +12,20 @@ Pillow
 tensorflow
 google-cloud-translate
 werkzeug
+datasets
+huggingface_hub
+python-dotenv
+deepface
+tf-keras
 
 # ===== Audio & Multimedia =====
-# pydub      # For audio processing (optional)
-# moviepy    # For video processing (optional)
+pydub      # For audio processing (optional)
+moviepy    # For video processing (optional)
+
+# ===== Deep Learning & Emotion Detection =====
+deepface   # For facial emotion recognition (deep learning)
 
 # ===== API & Web =====
-# beautifulsoup4  # For web scraping (optional)
-# selenium        # For browser automation (optional)
+beautifulsoup4  # For web scraping (optional)
+selenium        # For browser automation (optional)
 

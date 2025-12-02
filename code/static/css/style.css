@@ -103,6 +103,13 @@ body::before {
 .webcam-container {
   margin-top: 1rem;
   text-align: center;
+  position: relative;
+  display: inline-block;
+}
+
+.video-wrapper {
+  position: relative;
+  display: inline-block;
 }
 
 #video {
@@ -110,13 +117,78 @@ body::before {
   max-width: 400px;
   border-radius: 0.5rem;
   border: 2px solid var(--accent);
+  display: block;
+}
+
+/* Canvas overlay pour l'encadrement du visage */
+.face-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 10;
+  border-radius: 0.5rem;
 }
 
 .detected-emotion {
   margin-top: 1rem;
   font-size: 1.2rem;
-  color: var(--success);
   font-weight: bold;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.detected-emotion.success {
+  color: var(--success);
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid var(--success);
+}
+
+.detected-emotion.error {
+  color: var(--danger);
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid var(--danger);
+}
+
+/* Messages d'aide */
+.help-messages {
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: left;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.help-messages.success {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid var(--success);
+  color: var(--success);
+}
+
+.help-messages.warning {
+  background: rgba(249, 115, 22, 0.1);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+}
+
+.help-message {
+  margin: 0.5rem 0;
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.help-message:first-child {
+  margin-top: 0;
+}
+
+.help-message:last-child {
+  margin-bottom: 0;
 }
 
 .hidden { display: none; }

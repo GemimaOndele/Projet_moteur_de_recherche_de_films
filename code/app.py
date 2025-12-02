@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Optional
 import logging
 import os
 
 import pandas as pd
 from flask import Flask, jsonify, render_template, request
+from dotenv import load_dotenv
 
 from data_loading import charger_films_prepares
 from emotion_detection import detecter_emotion_image, image_base64_to_bytes
@@ -17,10 +18,18 @@ from sentiment import ajouter_sentiment_aux_films
 from sound_manager import add_sound_to_film, get_emotion_sound
 from tmdb_api import enrichir_liste_films
 
+# Charger les variables d'environnement depuis .env
 BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / ".env")
+
 DATA_DIR = BASE_DIR / "data"
 DATA_ENRICHED = DATA_DIR / "films_sentiment.csv"
+DATA_ENRICHED_COMPLETE = DATA_DIR / "films_enriched_complete.csv"
 DATASET_TMBD = BASE_DIR / "dataset" / "tmdb_5000_movies.csv"
+
+# Configuration Hugging Face (depuis .env)
+HF_REPO_NAME = os.getenv("HF_DATASET_REPO", "Gkop/moviemood-dataset")
+USE_HUGGINGFACE = os.getenv("USE_HF", "true").lower() == "true"  # Par défaut activé pour alléger le projet
 
 LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO').upper()
 logging.basicConfig(
@@ -33,10 +42,68 @@ app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max pour les uploads
 
 
+def _charger_depuis_huggingface() -> Optional[List[Dict]]:
+    """Charge le dataset depuis Hugging Face (priorité pour alléger le projet)."""
+    if not USE_HUGGINGFACE:
+        logger.info("💡 Hugging Face désactivé dans .env")
+        return None
+    
+    try:
+        from datasets import load_dataset
+        logger.info(f"📥 Chargement depuis Hugging Face: {HF_REPO_NAME}")
+        logger.info("   💡 Utilisation du dataset distant pour alléger le projet local")
+        
+        # Charger depuis Hugging Face
+        dataset = load_dataset(HF_REPO_NAME, split="train")
+        df = dataset.to_pandas()
+        films = df.to_dict(orient="records")
+        
+        # Convertir les genres de string en liste si nécessaire
+        for film in films:
+            if isinstance(film.get("genres"), str):
+                try:
+                    import ast
+                    film["genres"] = ast.literal_eval(film["genres"])
+                except Exception:
+                    film["genres"] = []
+        
+        logger.info(f"✅ {len(films)} films chargés depuis Hugging Face")
+        return films
+    except Exception as e:
+        error_msg = str(e)
+        logger.warning(f"⚠️  Impossible de charger depuis Hugging Face: {e}")
+        logger.info("   💡 Fallback vers fichier local si disponible")
+        return None
+
+
 def _charger_catalogue() -> List[Dict]:
-    """Charge les films enrichis s'ils existent, sinon fallback vers le CSV brut avec enrichissement limité."""
-    # Si un cache enrichi existe, l'utiliser
+    """Charge les films enrichis depuis Hugging Face (priorité) ou fichier local (fallback)."""
+    
+    # 1. PRIORITÉ : Hugging Face (pour alléger le projet)
+    films = _charger_depuis_huggingface()
+    if films:
+        return films
+    
+    # 2. Fallback : fichier local enrichi (si Hugging Face indisponible)
+    if DATA_ENRICHED_COMPLETE.exists():
+        logger.info(f"📥 Fallback: Chargement depuis fichier local: {DATA_ENRICHED_COMPLETE}")
+        logger.info("   💡 Pour alléger le projet, utilisez Hugging Face (configurez .env)")
+        df = pd.read_csv(DATA_ENRICHED_COMPLETE)
+        films = df.to_dict(orient="records")
+        # Convertir les genres de string en liste si nécessaire
+        for film in films:
+            if isinstance(film.get("genres"), str):
+                try:
+                    import ast
+                    film["genres"] = ast.literal_eval(film["genres"])
+                except Exception:
+                    film["genres"] = []
+        logger.info(f"✅ {len(films)} films chargés depuis fichier local enrichi")
+        return films
+    
+    # 3. Si cache enrichi partiel existe, l'utiliser
     if DATA_ENRICHED.exists():
+        logger.info(f"📥 Chargement depuis cache partiel: {DATA_ENRICHED}")
         df = pd.read_csv(DATA_ENRICHED)
         films = df.to_dict(orient="records")
         # Convertir les genres de string en liste si nécessaire
@@ -47,9 +114,11 @@ def _charger_catalogue() -> List[Dict]:
                     film["genres"] = ast.literal_eval(film["genres"])
                 except Exception:
                     film["genres"] = []
+        logger.info(f"✅ {len(films)} films chargés depuis cache partiel")
         return films
 
-    # Sinon: charger le CSV brut
+    # 4. Fallback: charger le CSV brut (sans enrichissement complet)
+    logger.info("📥 Chargement depuis CSV brut (fallback)...")
     films = charger_films_prepares(str(DATASET_TMBD))
     films = ajouter_sentiment_aux_films(films)
 
@@ -63,46 +132,10 @@ def _charger_catalogue() -> List[Dict]:
             film["backdrop_url"] = f"https://via.placeholder.com/1280x720?text={title[:30].replace(' ', '+')}"
         if not film.get("streaming_links"):
             film["streaming_links"] = []
-
-    # Si une clé TMDB est présente, enrichir les TOP 50 films seulement (rapide au démarrage)
-    try:
-        from tmdb_api import TMDB_API_KEY
-        if TMDB_API_KEY and TMDB_API_KEY != "your_api_key_here":
-            try:
-                # Enrichir seulement les 50 premiers films (rapide, ~30-60 sec)
-                top_n = 50
-                logger.info(f"ℹ️ Enrichissement des top {top_n} films via TMDB (rapide)...")
-                films_top = films[:top_n]
-                films_top = enrichir_liste_films(films_top)
-                films = films_top + films[top_n:]  # Recombiner
-
-                # Ajouter les sons à tous les films
-                for f in films:
-                    add_sound_to_film(f)
-
-                # Sauvegarder le cache partiel pour éviter re-enrichir les top 50
-                try:
-                    df_out = pd.DataFrame(films)
-                    df_out["genres"] = df_out["genres"].apply(lambda g: str(g) if not pd.isna(g) else "[]")
-                    DATA_ENRICHED.parent.mkdir(parents=True, exist_ok=True)
-                    df_out.to_csv(DATA_ENRICHED, index=False)
-                    logger.info(f"✅ Cache partiel sauvegardé ({top_n} films enrichis): {DATA_ENRICHED}")
-                except Exception as e:
-                    logger.warning(f"⚠️ Échec sauvegarde cache: {e}")
-            except Exception as e:
-                logger.warning(f"⚠️ Erreur enrichissement TMDB: {e}")
-                # Fallback: ajouter juste les sons
-                for film in films:
-                    add_sound_to_film(film)
-        else:
-            logger.warning("⚠️ Clé TMDB manquante; saut enrichissement, utilisation données locales.")
-            for film in films:
-                add_sound_to_film(film)
-    except Exception as e:
-        # Fallback final: ajouter juste les sons
-        logger.warning(f"Fallback: enrichissement TMDB a échoué: {e}")
-        for film in films:
-            add_sound_to_film(film)
+        add_sound_to_film(film)
+    
+    logger.warning("⚠️  Dataset non enrichi - utilisez enrich_all_films.py pour enrichir tous les films")
+    logger.info(f"✅ {len(films)} films chargés (non enrichis)")
 
     return films
 
@@ -213,16 +246,29 @@ def api_detect_emotion():
 
     try:
         image_data = file.read()
-        emotion = detecter_emotion_image(image_data)
+        result = detecter_emotion_image(image_data)
         
-        if emotion:
-            return jsonify({"emotion": emotion}), 200
-        else:
-            return jsonify({"error": "Aucune émotion détectée"}), 400
+        # Retourner toutes les informations (emotion, face_bbox, quality, confidence)
+        return jsonify(result), 200
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        logger.error(f"Erreur détection émotion: {e}")
+        return jsonify({
+            "error": str(e),
+            "emotion": None,
+            "face_bbox": None,
+            "quality": {
+                "brightness": 0,
+                "brightness_status": "erreur",
+                "face_detected": False,
+                "face_size_ratio": 0,
+                "messages": [f"❌ Erreur: {str(e)}"]
+            },
+            "confidence": 0.0
+        }), 500
 
 
 if __name__ == "__main__":
+    logger.info("🌐 Application démarrée. Ouvrez votre navigateur sur http://localhost:5000")
+    logger.info("💡 La détection d'émotion par webcam fonctionne uniquement sur http://localhost:5000 ou en HTTPS.")
     app.run(debug=True, host="0.0.0.0", port=5000)

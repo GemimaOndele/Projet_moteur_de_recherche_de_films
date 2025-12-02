@@ -4,14 +4,20 @@ from __future__ import annotations
 
 import os
 import logging
+from pathlib import Path
 from typing import Dict, Optional, Tuple
 
 import requests
+from dotenv import load_dotenv
+
+# Charger les variables d'environnement depuis .env
+BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / ".env")
 
 # Logger
 logger = logging.getLogger(__name__)
 
-# Clé API TMDB (à mettre dans une variable d'environnement en production)
+# Clé API TMDB (depuis .env)
 TMDB_API_KEY = os.getenv("TMDB_API_KEY", "your_api_key_here")
 # Token API v4 (si vous préférez utiliser le jeton plutôt que la clé v3)
 # Token API v4 (si vous préférez utiliser le jeton plutôt que la clé v3)

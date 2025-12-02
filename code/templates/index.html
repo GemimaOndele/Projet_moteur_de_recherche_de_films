@@ -8,10 +8,14 @@
   <div class="emotion-detection">
     <button id="btn-webcam" class="btn-webcam">📷 Détecter mon émotion (Webcam)</button>
     <div id="webcam-container" class="webcam-container hidden">
-      <video id="video" autoplay playsinline></video>
-      <canvas id="canvas" class="hidden"></canvas>
+      <div class="video-wrapper">
+        <video id="video" autoplay playsinline></video>
+        <!-- Canvas overlay pour l'encadrement du visage -->
+      </div>
+      <div id="help-messages" class="help-messages"></div>
       <button id="btn-capture" class="btn-capture">Capturer</button>
       <p id="detected-emotion" class="detected-emotion"></p>
+      <canvas id="canvas" class="hidden"></canvas>
     </div>
     <input type="file" id="file-input" accept="image/*" class="hidden">
     <button id="btn-upload" class="btn-upload">📁 Uploader une image</button>
@@ -45,4 +49,5 @@
 
 <script src="{{ url_for('static', filename='js/emotion-detection.js') }}"></script>
 <script src="{{ url_for('static', filename='js/sound-manager.js') }}"></script>
+<script src="{{ url_for('static', filename='js/emotion-bubbles.js') }}"></script>
 {% endblock %}

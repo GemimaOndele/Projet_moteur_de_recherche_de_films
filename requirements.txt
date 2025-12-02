@@ -13,13 +13,10 @@ Pillow
 tensorflow
 google-cloud-translate
 werkzeug
-<<<<<<< HEAD
 datasets
 huggingface_hub
 python-dotenv
 deepface
-=======
->>>>>>> 1517b58 (Sauvegarde de mon travail local (auth SQL + corrections))
 tf-keras
 
 # ===== Audio & Multimedia =====

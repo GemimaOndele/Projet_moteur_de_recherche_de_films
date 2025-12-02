@@ -8,8 +8,10 @@ import logging
 import os
 
 import pandas as pd
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, render_template, request, session, redirect, url_for
 from dotenv import load_dotenv
+from flask_sqlalchemy import SQLAlchemy
+from werkzeug.security import generate_password_hash, check_password_hash
 
 from data_loading import charger_films_prepares
 from emotion_detection import detecter_emotion_image, image_base64_to_bytes
@@ -39,7 +41,36 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
+# Clé secrète pour les sessions (à surcharger en prod via variable d'environnement)
+app.secret_key = os.getenv("SECRET_KEY", "dev-secret-key-change-me")
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max pour les uploads
+
+# ===== Configuration base de données (SQLite simple) =====
+DB_PATH = BASE_DIR / "data" / "users.db"
+app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{DB_PATH}"
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+db = SQLAlchemy(app)
+
+
+class User(db.Model):
+    """Utilisateur pour l'authentification."""
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(255), unique=True, nullable=False)
+    name = db.Column(db.String(255), nullable=True)
+    password_hash = db.Column(db.String(255), nullable=False)
+
+    def set_password(self, password: str) -> None:
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password: str) -> bool:
+        return check_password_hash(self.password_hash, password)
+
+
+# S'assurer que le dossier data existe pour la base
+DATA_DIR.mkdir(parents=True, exist_ok=True)
+with app.app_context():
+    db.create_all()
 
 
 def _charger_depuis_huggingface() -> Optional[List[Dict]]:
@@ -198,12 +229,113 @@ catalogue_films = _charger_catalogue()
 
 
 @app.get("/")
-def index():
+def auth_form():
+    """
+    Première page affichée : formulaire connexion / inscription.
+    Cette vue doit rendre ton fichier `form.html` (à placer dans le dossier `templates/`).
+    """
+    return render_template("form.html")
+
+
+@app.post("/login")
+def login():
+    """
+    Connexion de l'utilisateur contre la base SQL.
+    """
+    email = (request.form.get("email") or "").strip().lower()
+    password = request.form.get("password") or ""
+
+    if not email or not password:
+        return render_template(
+            "form.html",
+            error_login="Veuillez remplir email et mot de passe.",
+            active_tab="login",
+        )
+
+    user = User.query.filter_by(email=email).first()
+    if not user or not user.check_password(password):
+        return render_template(
+            "form.html",
+            error_login="Email ou mot de passe incorrect.",
+            active_tab="login",
+        )
+
+    # Auth OK : on stocke l'id utilisateur dans la session
+    session["user_id"] = user.id
+    session["user_email"] = user.email
+    session["user_name"] = user.name
+    return redirect(url_for("movie_mood"))
+
+
+@app.post("/signup")
+def signup():
+    """
+    Inscription : création de l'utilisateur dans la base SQL.
+    """
+    name = (request.form.get("name") or "").strip()
+    email = (request.form.get("email") or "").strip().lower()
+    password = request.form.get("password") or ""
+    confirm = request.form.get("confirm_password") or ""
+
+    if not email or not password or not confirm or not name:
+        return render_template(
+            "form.html",
+            error_signup="Veuillez remplir tous les champs.",
+            active_tab="signup",
+        )
+
+    if password != confirm:
+        return render_template(
+            "form.html",
+            error_signup="Les mots de passe ne correspondent pas.",
+            active_tab="signup",
+        )
+
+    # Vérifier que l'utilisateur n'existe pas déjà
+    if User.query.filter_by(email=email).first():
+        return render_template(
+            "form.html",
+            error_signup="Un compte existe déjà avec cet email.",
+            active_tab="signup",
+        )
+
+    # Créer l'utilisateur
+    user = User(email=email, name=name)
+    user.set_password(password)
+    db.session.add(user)
+    db.session.commit()
+
+    # Connexion automatique après inscription
+    session["user_id"] = user.id
+    session["user_email"] = user.email
+    session["user_name"] = user.name
+    return redirect(url_for("movie_mood"))
+
+
+@app.get("/logout")
+def logout():
+    """Déconnexion de l'utilisateur, retour au formulaire."""
+    session.clear()
+    return redirect(url_for("auth_form"))
+
+
+@app.get("/movie-mood")
+def movie_mood():
+    """
+    Page principale MovieMood (ancienne page d'accueil).
+    Accessible uniquement si l'utilisateur est connecté.
+    """
+    if "user_id" not in session:
+        return redirect(url_for("auth_form"))
     return render_template("index.html")
 
 
 @app.get("/search")
 def search():
+    # Protection : uniquement pour utilisateur connecté
+    if "user_id" not in session:
+        return redirect(url_for("auth_form"))
+
     titre = request.args.get("titre", "").strip()
     emotion = request.args.get("emotion", "").strip().lower()
 
@@ -237,6 +369,8 @@ def search():
 @app.post("/api/detect-emotion")
 def api_detect_emotion():
     """API endpoint pour détecter l'émotion depuis une image uploadée."""
+    if "user_id" not in session:
+        return jsonify({"error": "Non autorisé. Veuillez vous connecter."}), 401
     if 'image' not in request.files:
         return jsonify({"error": "Aucune image fournie"}), 400
 

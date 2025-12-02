@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>WanderIA – Connexion</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/form.css') }}"/>
+</head>
+<body>
+  <iframe
+    id="background-video"
+    src="https://www.youtube.com/embed/ZsJz2TJAPjw?autoplay=1&mute=0&loop=1&playlist=ZsJz2TJAPjw"
+    frameborder="0"
+    allow="autoplay; encrypted-media"
+    style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: -1;"
+  ></iframe>
+  <div class="container">
+    <div class="tabs">
+      <button id="loginTab" class="active">Se connecter</button>
+      <button id="registerTab">Créer un compte</button>
+    </div>
+
+    <!-- Login -->
+    <form id="loginForm" class="form active" autocomplete="on" method="post" action="{{ url_for('login') }}">
+      <input id="loginEmail" name="email" type="email" placeholder="Email" required />
+      <input id="loginPassword" name="password" type="password" placeholder="Mot de passe" required />
+      <a href="#" class="forgot-link">Mot de passe oublié ?</a>
+      <button type="submit" class="btn">Connexion</button>
+      {% if error_login %}
+      <p class="error">{{ error_login }}</p>
+      {% endif %}
+      <p class="or">Ou continuez avec</p>
+      <div class="socials">
+        <button type="button" class="social">G</button>
+        <button type="button" class="social">f</button>
+        <button type="button" class="social">t</button>
+      </div>
+    </form>
+
+    <!-- Register -->
+    <form id="registerForm" class="form" autocomplete="on" method="post" action="{{ url_for('signup') }}">
+      <input id="regName" name="name" type="text" placeholder="Nom complet" required />
+      <input id="regEmail" name="email" type="email" placeholder="Email" required />
+      <input id="regPassword" name="password" type="password" placeholder="Mot de passe" required />
+      <input id="regConfirm" name="confirm_password" type="password" placeholder="Confirmez le mot de passe" required />
+      <button type="submit" class="btn">S'inscrire</button>
+      {% if error_signup %}
+      <p class="error">{{ error_signup }}</p>
+      {% endif %}
+      <p class="or">Ou inscrivez-vous avec</p>
+      <div class="socials">
+        <button type="button" class="social">G</button>
+        <button type="button" class="social">f</button>
+        <button type="button" class="social">t</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- JS onglets (plus de mock d'auth, tout passe côté Flask) -->
+  <script src="{{ url_for('static', filename='js/form.js') }}"></script>
+</body>
+</html>

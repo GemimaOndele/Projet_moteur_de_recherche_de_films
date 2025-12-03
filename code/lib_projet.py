@@ -103,14 +103,16 @@ def normaliser_sentiment(score: float) -> float:
 
 # ---------- PARTIE "EMOTIONS & GENRES" ----------
 
-# Mapping émotion -> genres (avec ajout de "colere")
+# Mapping émotion -> genres (enrichi pour avoir plus de recommandations)
 emotion_to_genres = {
-    "triste":      ["Comedy", "Family"],
-    "stressé":     ["Comedy", "Adventure"],
-    "heureux":     ["Romance", "Music"],
-    "nostalgique": ["Drama", "History"],
-    "ennuyé":      ["Action", "Thriller", "Sci-Fi"],
-    "colere":      ["Action", "Thriller", "Crime", "War"],
+    "triste":      ["Comedy", "Family", "Drama", "Romance", "Animation"],
+    "stressé":     ["Comedy", "Adventure", "Action", "Animation", "Family"],
+    "heureux":     ["Romance", "Music", "Comedy", "Animation", "Family"],
+    "nostalgique": ["Drama", "History", "Romance", "Music", "Family", "War"],
+    "ennuyé":      ["Action", "Thriller", "Sci-Fi", "Adventure", "Crime", "Mystery"],
+    "colere":      ["Action", "Thriller", "Crime", "War", "Drama", "History"],
+    "peur":        ["Horror", "Thriller", "Mystery", "Crime", "Sci-Fi"],
+    "surprise":    [],  # Cas spécial : retourne tous les films, triés par note
 }
 
 

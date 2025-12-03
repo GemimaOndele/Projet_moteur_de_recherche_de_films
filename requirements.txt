@@ -1,5 +1,5 @@
 pandas
-numpy
+numpy<2.3.0,>=1.20.0  # Compatible avec opencv-python
 matplotlib
 seaborn
 scikit-learn
@@ -18,6 +18,8 @@ huggingface_hub
 python-dotenv
 deepface
 tf-keras
+jupyter
+ipykernel
 
 # ===== Audio & Multimedia =====
 pydub      # For audio processing (optional)

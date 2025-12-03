@@ -7,13 +7,26 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/form.css') }}"/>
 </head>
 <body>
+  <!-- Conteneur pour la vidéo YouTube (l'API YouTube créera le player ici) -->
+  <div id="background-video" class="video-container"></div>
+  
+  <!-- Iframe de fallback (cachée si l'API YouTube fonctionne) -->
   <iframe
-    id="background-video"
-    src="https://www.youtube.com/embed/ZsJz2TJAPjw?autoplay=1&mute=0&loop=1&playlist=ZsJz2TJAPjw"
+    id="background-video-fallback"
+    class="video-fallback"
+    src="https://www.youtube.com/embed/ZsJz2TJAPjw?autoplay=1&mute=1&loop=1&playlist=ZsJz2TJAPjw&controls=0&playsinline=1&enablejsapi=1&rel=0&modestbranding=1&iv_load_policy=3"
     frameborder="0"
-    allow="autoplay; encrypted-media"
-    style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: -1;"
+    title="Vidéo de fond"
+    allow="autoplay; encrypted-media; fullscreen; accelerometer; gyroscope; picture-in-picture"
+    allowfullscreen
+    loading="eager"
   ></iframe>
+  
+  <!-- Bouton de contrôle audio -->
+  <button id="audio-toggle" class="audio-control" title="Activer/Désactiver le son">
+    <span id="audio-icon">🔇</span>
+  </button>
+  
   <div class="container">
     <div class="tabs">
       <button id="loginTab" class="active">Se connecter</button>
@@ -58,5 +71,163 @@
 
   <!-- JS onglets (plus de mock d'auth, tout passe côté Flask) -->
   <script src="{{ url_for('static', filename='js/form.js') }}"></script>
+  
+  <!-- Script pour forcer la lecture de la vidéo YouTube -->
+  <script>
+    // Charger l'API YouTube pour un meilleur contrôle
+    var tag = document.createElement('script');
+    tag.src = "https://www.youtube.com/iframe_api";
+    var firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+    var player;
+    var isMuted = true; // État initial : muet
+    
+    function onYouTubeIframeAPIReady() {
+      var container = document.getElementById('background-video');
+      var fallback = document.getElementById('background-video-fallback');
+      
+      if (container) {
+        try {
+          player = new YT.Player('background-video', {
+            videoId: 'ZsJz2TJAPjw',
+            playerVars: {
+              'autoplay': 1,
+              'mute': 1,
+              'loop': 1,
+              'playlist': 'ZsJz2TJAPjw',
+              'controls': 0,
+              'playsinline': 1,
+              'modestbranding': 1,
+              'rel': 0,
+              'iv_load_policy': 3,
+              'showinfo': 0
+            },
+            events: {
+              'onReady': function(event) {
+                try {
+                  event.target.playVideo();
+                  event.target.setVolume(0); // Démarrer muet
+                  // Cacher l'iframe de fallback si le player fonctionne
+                  if (fallback) {
+                    fallback.style.display = 'none';
+                  }
+                  // Forcer la lecture après un court délai
+                  setTimeout(function() {
+                    if (event.target && typeof event.target.playVideo === 'function') {
+                      var state = event.target.getPlayerState();
+                      if (state !== YT.PlayerState.PLAYING && state !== YT.PlayerState.BUFFERING) {
+                        event.target.playVideo();
+                      }
+                    }
+                  }, 1000);
+                } catch(e) {
+                  console.log('Erreur lors du démarrage de la vidéo:', e);
+                  // Afficher le fallback en cas d'erreur
+                  if (fallback) {
+                    fallback.style.display = 'block';
+                  }
+                }
+              },
+              'onStateChange': function(event) {
+                if (event.data === YT.PlayerState.ENDED) {
+                  event.target.playVideo();
+                }
+                // Relancer si mise en pause
+                if (event.data === YT.PlayerState.PAUSED) {
+                  setTimeout(function() {
+                    if (event.target && typeof event.target.playVideo === 'function') {
+                      event.target.playVideo();
+                    }
+                  }, 200);
+                }
+              },
+              'onError': function(event) {
+                console.log('Erreur YouTube player:', event.data);
+                // Afficher le fallback en cas d'erreur
+                if (fallback) {
+                  fallback.style.display = 'block';
+                }
+              }
+            }
+          });
+        } catch(e) {
+          console.log('Erreur lors de la création du player YouTube:', e);
+          // Afficher le fallback en cas d'erreur
+          if (fallback) {
+            fallback.style.display = 'block';
+          }
+        }
+      }
+    }
+
+    // Fallback : s'assurer que la vidéo se charge même sans l'API YouTube
+    window.addEventListener('load', function() {
+      setTimeout(function() {
+        // Si l'API YouTube n'a pas créé le player après 3 secondes, utiliser l'iframe
+        if (!player) {
+          var fallback = document.getElementById('background-video-fallback');
+          if (fallback) {
+            fallback.style.display = 'block';
+            console.log('Utilisation de l\'iframe de fallback (API YouTube non disponible)');
+          }
+        }
+      }, 3000);
+    });
+
+    // Gestion du bouton audio
+    function toggleAudio() {
+      if (!player) {
+        // Si l'API YouTube n'est pas disponible, on ne peut pas contrôler l'audio
+        alert('Le contrôle audio nécessite l\'API YouTube. Veuillez actualiser la page.');
+        return;
+      }
+      
+      try {
+        if (isMuted) {
+          // Activer le son
+          player.unMute();
+          player.setVolume(70); // Volume à 70%
+          isMuted = false;
+          document.getElementById('audio-icon').textContent = '🔊';
+          document.getElementById('audio-toggle').title = 'Désactiver le son';
+        } else {
+          // Désactiver le son
+          player.mute();
+          isMuted = true;
+          document.getElementById('audio-icon').textContent = '🔇';
+          document.getElementById('audio-toggle').title = 'Activer le son';
+        }
+      } catch(e) {
+        console.log('Erreur lors du changement de volume:', e);
+      }
+    }
+    
+    // Ajouter l'événement au bouton audio
+    document.addEventListener('DOMContentLoaded', function() {
+      var audioToggle = document.getElementById('audio-toggle');
+      if (audioToggle) {
+        audioToggle.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          toggleAudio();
+        });
+      }
+    });
+
+    // Interaction utilisateur pour débloquer l'autoplay
+    document.addEventListener('click', function() {
+      if (player && typeof player.playVideo === 'function') {
+        try {
+          var state = player.getPlayerState();
+          if (state !== YT.PlayerState.PLAYING) {
+            player.playVideo();
+          }
+        } catch(e) {
+          console.log('Erreur lors de la lecture après clic:', e);
+        }
+      }
+    }, { once: true });
+  </script>
 </body>
 </html>

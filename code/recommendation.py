@@ -60,19 +60,43 @@ def recommander_par_emotion(emotion: str, films: List[Film], n: int = 5) -> List
     if not emotion:
         return []
 
-    genres_cibles = emotion_to_genres.get(emotion.lower(), [])
-    if not genres_cibles:
-        return []
+    emotion_lower = emotion.lower()
+    
+    # Cas spécial pour 'surprise' : retourner les meilleurs films notés de tous genres
+    if emotion_lower == "surprise":
+        candidats = []
+        for film in films:
+            # Filtrer les films avec une note valide (vote_average > 0)
+            if film.get("vote_average", 0.0) > 0:
+                film_copy = dict(film)
+                film_copy["score_emotion"] = film.get("vote_average", 0.0)
+                candidats.append(film_copy)
+        
+        # Trier par note décroissante (vote_average), du mieux noté au moins bien noté
+        candidats.sort(key=lambda f: f.get("vote_average", 0.0), reverse=True)
+        return candidats[:n]
 
+    genres_cibles = emotion_to_genres.get(emotion_lower, [])
     genres_cibles_set = set(genres_cibles)
     candidats: List[Film] = []
 
+    # Filtrer les films correspondant aux genres de l'émotion
     for film in films:
-        if not genres_cibles_set.intersection(set(film.get("genres", []))):
-            continue
-        film_copy = dict(film)
-        film_copy["score_emotion"] = calculer_score_film(film_copy, emotion)
-        candidats.append(film_copy)
+        film_genres = set(film.get("genres", []))
+        if genres_cibles_set.intersection(film_genres):
+            film_copy = dict(film)
+            film_copy["score_emotion"] = calculer_score_film(film_copy, emotion)
+            candidats.append(film_copy)
 
-    candidats.sort(key=lambda f: f["score_emotion"], reverse=True)
+    # Si aucun candidat trouvé, utiliser un fallback : retourner les meilleurs films de tous genres
+    if not candidats:
+        # Fallback : retourner les meilleurs films notés
+        for film in films:
+            if film.get("vote_average", 0.0) > 0:
+                film_copy = dict(film)
+                film_copy["score_emotion"] = film.get("vote_average", 0.0)
+                candidats.append(film_copy)
+
+    # Trier uniquement par note décroissante (vote_average), du mieux noté au moins bien noté
+    candidats.sort(key=lambda f: f.get("vote_average", 0.0), reverse=True)
     return candidats[:n]

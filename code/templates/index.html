@@ -40,13 +40,17 @@
         <option value="surprise">😲 Surprise - Étonnez-moi!</option>
       </select>
     </div>
-    <button type="submit">🔍 Chercher / Recommander</button>
+    <button type="submit" id="search-btn">
+      <span id="search-btn-text">🔍 Chercher / Recommander</span>
+      <span id="search-loader" class="loader hidden"></span>
+    </button>
   </form>
 
   <!-- Lecteur audio pour son d'émotion -->
   <audio id="emotion-sound" preload="auto"></audio>
 </section>
 
+<script src="{{ url_for('static', filename='js/loading-indicator.js') }}"></script>
 <script src="{{ url_for('static', filename='js/emotion-detection.js') }}"></script>
 <script src="{{ url_for('static', filename='js/sound-manager.js') }}"></script>
 <script src="{{ url_for('static', filename='js/emotion-bubbles.js') }}"></script>

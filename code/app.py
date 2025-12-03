@@ -18,7 +18,8 @@ from emotion_detection import detecter_emotion_image, image_base64_to_bytes
 from recommendation import rechercher_par_titre, recommander_par_emotion
 from sentiment import ajouter_sentiment_aux_films
 from sound_manager import add_sound_to_film, get_emotion_sound
-from tmdb_api import enrichir_liste_films
+from tmdb_api import enrichir_film_avec_api, enrichir_liste_films
+from cache_manager import get_cached_films, cache_films
 
 # Charger les variables d'environnement depuis .env
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -185,12 +186,37 @@ def _dedupe_films(films: List[Dict]) -> List[Dict]:
 
 
 def _enrichir_films(films: List[Dict]) -> List[Dict]:
-    """Enrichit les films avec API TMDB et sons."""
-    # Enrichir avec API TMDB (optionnel, peut être désactivé si pas de clé API)
-    try:
-        films = enrichir_liste_films(films)
-    except Exception as e:
-        logger.warning(f"⚠️ Erreur enrichissement TMDB: {e}")
+    """Enrichit les films avec API TMDB et sons (avec cache pour optimiser les performances)."""
+    if not films:
+        return []
+    
+    # Séparer les films en cache et ceux à enrichir
+    films_cached, films_to_enrich = get_cached_films(films)
+    
+    logger.info(f"📦 {len(films_cached)} films depuis le cache, {len(films_to_enrich)} à enrichir")
+    
+    # Enrichir uniquement les films qui ne sont pas en cache
+    if films_to_enrich:
+        try:
+            films_enriched_new = []
+            for film in films_to_enrich:
+                try:
+                    film_enriched = enrichir_film_avec_api(film)
+                    films_enriched_new.append(film_enriched)
+                except Exception as e:
+                    logger.warning(f"⚠️ Erreur enrichissement film {film.get('id')}: {e}")
+                    films_enriched_new.append(film)
+            
+            # Mettre en cache les nouveaux films enrichis
+            cache_films(films_enriched_new)
+            
+            # Combiner avec les films en cache
+            films = films_cached + films_enriched_new
+        except Exception as e:
+            logger.warning(f"⚠️ Erreur enrichissement TMDB: {e}")
+            films = films_cached + films_to_enrich
+    else:
+        films = films_cached
     
     # Ajouter fallbacks pour posters/backdrops/trailers si manquants
     for film in films:
@@ -225,7 +251,12 @@ def _enrichir_films(films: List[Dict]) -> List[Dict]:
     return films
 
 
+# Charger le catalogue avec message de progression
+logger.info("🚀 Initialisation de l'application...")
+logger.info("📥 Chargement du catalogue de films (cela peut prendre quelques secondes)...")
 catalogue_films = _charger_catalogue()
+logger.info(f"✅ Catalogue chargé : {len(catalogue_films)} films disponibles")
+logger.info("🌐 Application prête à recevoir les requêtes")
 
 
 @app.get("/")
@@ -347,7 +378,7 @@ def search():
             resultats.append(film)
 
     if emotion:
-        resultats.extend(recommander_par_emotion(emotion, catalogue_films, n=5))
+        resultats.extend(recommander_par_emotion(emotion, catalogue_films, n=20))
 
     resultats = _dedupe_films(resultats)
     

@@ -1,5 +1,17 @@
 {% extends "base.html" %}
 {% block content %}
+<!-- Overlay de chargement (sera caché par JavaScript) -->
+<div id="loading-overlay" class="loading-overlay">
+  <div class="loading-content">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Chargement des résultats...</div>
+    <div class="loading-subtext">Enrichissement des films et préparation de l'affichage...</div>
+    <div class="loading-progress">
+      <div class="loading-progress-bar"></div>
+    </div>
+  </div>
+</div>
+
 <section class="results">
   <div class="results-header">
     <h2>Résultats</h2>
@@ -147,6 +159,21 @@
   <div class="visualizer-bar"></div>
 </div>
 
+<script src="{{ url_for('static', filename='js/loading-indicator.js') }}"></script>
 <script src="{{ url_for('static', filename='js/results-enhanced.js') }}"></script>
 <script src="{{ url_for('static', filename='js/fix-features.js') }}"></script>
+<script>
+  // Cacher l'overlay de chargement une fois la page chargée
+  document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(function() {
+      const overlay = document.getElementById('loading-overlay');
+      if (overlay) {
+        overlay.classList.add('hidden');
+        setTimeout(function() {
+          overlay.style.display = 'none';
+        }, 300);
+      }
+    }, 500);
+  });
+</script>
 {% endblock %}

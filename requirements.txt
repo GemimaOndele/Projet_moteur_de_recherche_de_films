@@ -21,13 +21,10 @@ tf-keras
 jupyter
 ipykernel
 python-pptx  # Pour générer la présentation PowerPoint
-dataloading
-pydantic# ===== Audio & Multimedia =====
+# ===== Audio & Multimedia =====
+pydantic
 pydub      # For audio processing (optional)
 moviepy    # For video processing (optional)
-pydantic
-# ===== Deep Learning & Emotion Detection =====
-deepface   # For facial emotion recognition (deep learning)
 
 # ===== API & Web =====
 beautifulsoup4  # For web scraping (optional)

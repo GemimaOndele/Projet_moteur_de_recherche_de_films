@@ -8,14 +8,20 @@ from pathlib import Path
 from typing import List, Dict
 
 import pandas as pd
+import sys
+
+# Configuration
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+CODE_DIR = BASE_DIR / "code"
+
+# Ajouter le dossier code au path pour les imports
+if str(CODE_DIR) not in sys.path:
+    sys.path.insert(0, str(CODE_DIR))
 
 from data_loading import charger_films_prepares
 from sentiment import ajouter_sentiment_aux_films
 from tmdb_api import enrichir_film_avec_api, check_tmdb_env
 from sound_manager import add_sound_to_film
-
-# Configuration
-BASE_DIR = Path(__file__).resolve().parent.parent
 DATASET_TMBD = BASE_DIR / "dataset" / "tmdb_5000_movies.csv"
 OUTPUT_FILE = BASE_DIR / "data" / "films_enriched_complete.csv"
 

@@ -1,6 +1,6 @@
 # lib_projet.py
 # ============================
-# Librairie du projet (Gémima)
+# Librairie du projet 
 # Contient les fonctions utilitaires communes :
 # - parsing des genres
 # - extraction de l'année

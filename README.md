@@ -7,6 +7,10 @@ Application Flask de recommandation de films basée sur les émotions de l'utili
 ### 1. Installation
 
 ```powershell
+#Création de votre environnement virtuel pour enregistrer l'installation de otus les extentions, librairies du projet
+python -m venv .moteur
+
+#Installation des librairies du projet
 pip install -r requirements.txt
 ```
 
@@ -19,6 +23,7 @@ copy env.template .env
 ```
 
 Éditez `.env` :
+
 ```env
 TMDB_API_KEY=votre_cle_tmdb
 HF_TOKEN=votre_token_huggingface
@@ -107,4 +112,3 @@ Voir le dossier `docs/` pour la documentation complète.
 - Le dataset est chargé depuis Hugging Face par défaut (allège le projet)
 - Les fichiers locaux dans `data/` servent de fallback
 - Configurez `.env` avec vos clés API pour utiliser toutes les fonctionnalités
-

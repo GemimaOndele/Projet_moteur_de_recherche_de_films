@@ -20,6 +20,7 @@ deepface
 tf-keras
 jupyter
 ipykernel
+python-pptx  # Pour générer la présentation PowerPoint
 
 # ===== Audio & Multimedia =====
 pydub      # For audio processing (optional)

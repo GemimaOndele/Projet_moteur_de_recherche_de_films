@@ -7,7 +7,7 @@ Application Flask de recommandation de films basée sur les émotions de l'utili
 ### 1. Installation
 
 ```powershell
-#Création de votre environnement virtuel pour enregistrer l'installation de otus les extentions, librairies du projet
+#Création de votre propre environnement virtuel de travail pour enregistrer l'installation des extentions, des librairies du projet.
 python -m venv .moteur
 
 #Installation des librairies du projet

@@ -62,7 +62,7 @@ def create_presentation():
     height = Inches(1.5)
     txBox3 = slide.shapes.add_textbox(left, top, width, height)
     tf3 = txBox3.text_frame
-    tf3.text = "Équipe :\nGémima ONDELE POURU | Fatoumata BAH | Hector KOMBOU\n\nProjet Académique - Data Engineering"
+    tf3.text = "Équipe :\nGémima ONDELE POUROU | Fatoumata BAH | Hector KOMBOU\n\nProjet Académique - Data Engineering"
     p3 = tf3.paragraphs[0]
     p3.font.size = Pt(18)
     p3.font.color.rgb = TEXT_COLOR
@@ -1428,7 +1428,7 @@ def detecter_emotion_image(image_data: bytes):
     p.alignment = PP_ALIGN.CENTER
     
     p = tf.add_paragraph()
-    p.text = "Gémima ONDELE POURU"
+    p.text = "Gémima ONDELE POUROU"
     p.font.size = Pt(16)
     p.alignment = PP_ALIGN.CENTER
     

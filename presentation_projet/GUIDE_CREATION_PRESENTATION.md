@@ -102,7 +102,7 @@ Texte secondaire : #F7F7F7
 │  Recommandation de Films            │
 │  par Émotion                        │
 │                                     │
-│  Gémima ONDELE POURU                │
+│  Gémima ONDELE POUROU                │
 │  Fatoumata BAH                      │
 │  Hector KOMBOU                      │
 │                                     │

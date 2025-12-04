@@ -19,7 +19,7 @@
 Plateforme Web IA de Recommandation de Films par Émotion
 
 Équipe :
-Gémima ONDELE POURU | Fatoumata BAH | Hector KOMBOU
+Gémima ONDELE POUROU | Fatoumata BAH | Hector KOMBOU
 
 Projet Académique - Data Engineering
 ```
@@ -803,7 +803,7 @@ Merci à notre encadrante pour :
 
 **Contact :**
 
-- Gémima ONDELE POURU
+- Gémima ONDELE POUROU
 - Fatoumata BAH
 - Hector KOMBOU
 
